@@ -1,0 +1,46 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Mock Test Platform{% endblock %}</title>
+  <meta name="description" content="Timed online mock tests with instant scoring and answer explanations.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233949ab'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="{% url 'exams:home' %}"><span class="brand-mark" aria-hidden="true">✓</span> MockTest</a>
+      <nav class="nav" aria-label="Main">
+        <a class="hide-sm" href="{% url 'exams:home' %}">Tests</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'exams:dashboard' %}">My results</a>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link" type="submit">Log out</button></form>
+        {% else %}
+          <a href="{% url 'login' %}">Log in</a>
+          <a class="btn btn-primary" href="{% url 'signup' %}">Sign up free</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}<li class="message {{ message.tags }}">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">Demo project by <a href="https://github.com/sekhar-builds">Sekhar</a>: timed mock tests with instant results.</div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

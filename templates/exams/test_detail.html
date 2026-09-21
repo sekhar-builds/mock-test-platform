@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ test.title }} - MockTest{% endblock %}
+
+{% block content %}
+<p class="small"><a href="{% url 'exams:home' %}">← All tests</a></p>
+
+<div class="layout-2">
+  <div class="stack">
+    <div class="card">
+      <span class="badge">{{ test.subject.name }}</span>
+      <h1 style="margin-top: 12px">{{ test.title }}</h1>
+      {% if test.description %}<p class="muted">{{ test.description }}</p>{% endif %}
+
+      <div class="grid grid-stats" style="margin: 20px 0">
+        <div class="card stat"><div class="stat-value">{{ question_total }}</div><div class="stat-label">Questions</div></div>
+        <div class="card stat"><div class="stat-value">{{ test.duration_minutes }}</div><div class="stat-label">Minutes</div></div>
+        <div class="card stat"><div class="stat-value">{{ test.max_score|floatformat:"-2" }}</div><div class="stat-label">Max marks</div></div>
+      </div>
+
+      <h3>Instructions</h3>
+      <ul class="muted">
+        <li>Each correct answer earns <strong>{{ test.marks_per_question|floatformat:"-2" }}</strong> mark(s).</li>
+        {% if test.negative_marks %}
+          <li>Each wrong answer deducts <strong>{{ test.negative_marks|floatformat:"-2" }}</strong> mark(s). Unanswered questions lose nothing.</li>
+        {% else %}
+          <li>There is no negative marking.</li>
+        {% endif %}
+        <li>The timer starts as soon as you begin, and the test submits automatically when time runs out.</li>
+        <li>You'll see your score and an explanation for every question right after submitting.</li>
+      </ul>
+
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'exams:start_test' test.slug %}">
+          {% csrf_token %}
+          <button class="btn btn-primary btn-lg" type="submit">Start test</button>
+        </form>
+      {% else %}
+        <a class="btn btn-primary btn-lg" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to start</a>
+        <p class="small muted" style="margin-top: 10px">New here? <a href="{% url 'signup' %}">Create a free account</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="stack">
+    {% if my_attempts %}
+    <div class="card">
+      <h3>Your recent attempts</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Score</th><th></th></tr></thead>
+          <tbody>
+          {% for attempt in my_attempts %}
+            <tr>
+              <td>{{ attempt.submitted_at|date:"d M, H:i" }}</td>
+              <td>{{ attempt.score|floatformat:"-2" }} ({{ attempt.percentage }}%)</td>
+              <td><a href="{% url 'exams:result' attempt.id %}">Review</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h3>🏆 Top scores</h3>
+      {% if top_scores %}
+        <div class="table-wrap">
+          <table>
+            <tbody>
+            {% for row in top_scores %}
+              <tr><td>{{ forloop.counter }}. {{ row.user__username }}</td><td>{{ row.best|floatformat:"-2" }} / {{ test.max_score|floatformat:"-2" }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted small">No attempts yet. Be the first!</p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

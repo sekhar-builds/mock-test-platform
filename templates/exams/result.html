@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Result: {{ attempt.test.title }} - MockTest{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px">
+  <div class="score-hero">
+    <div class="score-ring" style="--pct: {{ attempt.percentage }}"><span>{{ attempt.percentage }}%</span></div>
+    <div>
+      <span class="badge">{{ attempt.test.subject.name }}</span>
+      <h1 style="margin-top: 10px">{{ attempt.test.title }}</h1>
+      <p class="muted">You scored <strong>{{ attempt.score|floatformat:"-2" }}</strong> out of {{ attempt.test.max_score|floatformat:"-2" }} marks.</p>
+      <div class="pill-row">
+        <span class="pill correct">✓ {{ attempt.correct_count }} correct</span>
+        <span class="pill wrong">✗ {{ attempt.wrong_count }} wrong</span>
+        <span class="pill skipped">– {{ attempt.unanswered_count }} skipped</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap">
+    <form method="post" action="{% url 'exams:start_test' attempt.test.slug %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Retake test</button></form>
+    <a class="btn btn-outline" href="{% url 'exams:dashboard' %}">My results</a>
+    <a class="btn btn-outline" href="{% url 'exams:home' %}">More tests</a>
+  </div>
+</div>
+
+<h2>Answer review</h2>
+<div class="stack review">
+  {% for item in review %}
+    {% with q=item.question answer=item.answer %}
+    <div class="card">
+      <div class="question-head">
+        <span class="q-num">Q{{ forloop.counter }}.</span>
+        <span class="q-text">{{ q.text }}</span>
+      </div>
+      <div class="options">
+        {% for choice in q.choices.all %}
+          {% if choice.is_correct %}
+            <div class="option is-correct"><span>{{ choice.text }}</span><span class="tag">{% if answer.choice_id == choice.id %}✓ Your answer{% else %}✓ Correct answer{% endif %}</span></div>
+          {% elif answer.choice_id == choice.id %}
+            <div class="option is-wrong"><span>{{ choice.text }}</span><span class="tag">✗ Your answer</span></div>
+          {% else %}
+            <div class="option"><span>{{ choice.text }}</span></div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% if not answer.choice_id %}<p class="small muted" style="margin: 10px 0 0">You skipped this question.</p>{% endif %}
+      {% if q.explanation %}<div class="explanation"><strong>Explanation:</strong> {{ q.explanation }}</div>{% endif %}
+    </div>
+    {% endwith %}
+  {% endfor %}
+</div>
+{% endblock %}

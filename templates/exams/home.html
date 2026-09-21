@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <h1>Practice with timed mock tests</h1>
+  <p>Take exam-style MCQ tests, get your score the moment you submit, and learn from a detailed explanation for every question.</p>
+</section>
+
+{% if subjects %}
+<nav class="chips" aria-label="Filter by subject">
+  <a class="chip {% if not active_subject %}active{% endif %}" href="{% url 'exams:home' %}">All subjects</a>
+  {% for subject in subjects %}
+    <a class="chip {% if active_subject == subject.slug %}active{% endif %}" href="?subject={{ subject.slug }}">{{ subject.name }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<div class="grid grid-tests">
+  {% for test in tests %}
+    <a class="card test-card" href="{{ test.get_absolute_url }}">
+      <span><span class="badge">{{ test.subject.name }}</span></span>
+      <h3>{{ test.title }}</h3>
+      <p>{{ test.description|truncatewords:22 }}</p>
+      <div class="meta">
+        <span>📝 {{ test.question_total }} questions</span>
+        <span>⏱ {{ test.duration_minutes }} min</span>
+      </div>
+    </a>
+  {% empty %}
+    <div class="card empty">No tests are published yet. Check back soon.</div>
+  {% endfor %}
+</div>
+{% endblock %}

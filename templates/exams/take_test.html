@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ attempt.test.title }} - MockTest{% endblock %}
+
+{% block content %}
+<form id="exam-form" method="post" action="{% url 'exams:submit_test' attempt.id %}">
+  {% csrf_token %}
+
+  <div class="exam-bar">
+    <h1>{{ attempt.test.title }}</h1>
+    <span class="progress-text"><span id="answered-count">0</span> / {{ questions|length }} answered</span>
+    <span class="timer" id="timer" role="timer" aria-live="off" data-seconds="{{ seconds_left }}">--:--</span>
+  </div>
+
+  <div class="layout-2">
+    <div class="stack">
+      {% for question in questions %}
+        <fieldset class="card question" id="q{{ forloop.counter }}" style="margin-inline: 0">
+          <legend class="question-head" style="float: left; width: 100%; padding: 0">
+            <span class="q-num">Q{{ forloop.counter }}.</span>
+            <span class="q-text">{{ question.text }}</span>
+          </legend>
+          <div class="options" style="clear: both">
+            {% for choice in question.choices.all %}
+              <label class="option">
+                <input type="radio" name="q_{{ question.id }}" value="{{ choice.id }}" data-index="{{ forloop.parentloop.counter }}">
+                <span>{{ choice.text }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+      {% endfor %}
+    </div>
+
+    <aside class="side-sticky">
+      <div class="card">
+        <h3>Question palette</h3>
+        <p class="small muted">Tap a number to jump to that question.</p>
+        <div class="palette" id="palette">
+          {% for question in questions %}<a href="#q{{ forloop.counter }}" data-index="{{ forloop.counter }}">{{ forloop.counter }}</a>{% endfor %}
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top: 20px">Submit test</button>
+      </div>
+    </aside>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const form = document.getElementById("exam-form");
+  const timer = document.getElementById("timer");
+  const countEl = document.getElementById("answered-count");
+  const radios = Array.from(form.querySelectorAll('input[type="radio"]'));
+  const total = {{ questions|length }};
+  const storageKey = "attempt-{{ attempt.id }}";
+  let submitting = false;
+
+  // Restore answers after an accidental refresh. Storage can be unavailable
+  // (private mode, blocked cookies), in which case the test still works.
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    radios.forEach((r) => { if (saved[r.name] === r.value) r.checked = true; });
+  } catch (e) {}
+
+  function refreshProgress() {
+    const answered = new Set(radios.filter((r) => r.checked).map((r) => r.dataset.index));
+    countEl.textContent = answered.size;
+    document.querySelectorAll("#palette a").forEach((a) => {
+      a.classList.toggle("answered", answered.has(a.dataset.index));
+    });
+  }
+
+  form.addEventListener("change", () => {
+    refreshProgress();
+    try {
+      const data = {};
+      radios.filter((r) => r.checked).forEach((r) => { data[r.name] = r.value; });
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (e) {}
+  });
+  refreshProgress();
+
+  // Saved answers are no longer needed once they are on their way to the server.
+  function clearSaved() {
+    try { localStorage.removeItem(storageKey); } catch (e) {}
+  }
+
+  form.addEventListener("submit", (event) => {
+    if (submitting) return;
+    const answered = Number(countEl.textContent);
+    if (answered < total && !confirm(`You have answered ${answered} of ${total} questions. Submit anyway?`)) {
+      event.preventDefault();
+      return;
+    }
+    submitting = true;
+    clearSaved();
+  });
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!submitting) event.preventDefault();
+  });
+
+  // Count down against a fixed end time so a sleeping laptop or a background
+  // tab cannot slow the clock down. The server enforces the real deadline.
+  const endAt = Date.now() + Number(timer.dataset.seconds) * 1000;
+  function tick() {
+    const left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+    const m = String(Math.floor(left / 60)).padStart(2, "0");
+    const s = String(left % 60).padStart(2, "0");
+    timer.textContent = `${m}:${s}`;
+    timer.classList.toggle("low", left <= 60);
+    if (left === 0) {
+      submitting = true;
+      clearInterval(interval);
+      clearSaved();
+      form.submit();
+    }
+  }
+  const interval = setInterval(tick, 1000);
+  tick();
+})();
+</script>
+{% endblock %}

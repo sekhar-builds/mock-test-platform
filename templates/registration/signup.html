@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up - MockTest{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+  <h1>Create your account</h1>
+  <p class="muted">Free forever. Track every attempt and watch your scores improve.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-row">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        {% if field.help_text %}<div class="helptext">{{ field.help_text|safe }}</div>{% endif %}
+      </div>
+    {% endfor %}
+    <button class="btn btn-primary btn-block" type="submit">Sign up</button>
+  </form>
+  <p class="small muted" style="margin-top: 16px">Already registered? <a href="{% url 'login' %}">Log in</a></p>
+</div>
+{% endblock %}

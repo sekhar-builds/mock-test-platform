@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}My results - MockTest{% endblock %}
+
+{% block content %}
+<h1>Welcome back, {{ user.username }}</h1>
+<p class="muted">Track your progress across every test you've taken.</p>
+
+<div class="grid grid-stats" style="margin: 24px 0">
+  <div class="card stat"><div class="stat-value">{{ stats.taken }}</div><div class="stat-label">Attempts</div></div>
+  <div class="card stat"><div class="stat-value">{{ stats.tests }}</div><div class="stat-label">Different tests</div></div>
+  <div class="card stat"><div class="stat-value">{{ stats.average }}%</div><div class="stat-label">Average score</div></div>
+  <div class="card stat"><div class="stat-value">{{ stats.best }}%</div><div class="stat-label">Best score</div></div>
+</div>
+
+<div class="card">
+  <h2>Recent attempts</h2>
+  {% if attempts %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Test</th><th>Subject</th><th>Date</th><th>Score</th><th>Correct</th><th></th></tr></thead>
+        <tbody>
+        {% for attempt in attempts %}
+          <tr>
+            <td>{{ attempt.test.title }}</td>
+            <td><span class="badge">{{ attempt.test.subject.name }}</span></td>
+            <td>{{ attempt.submitted_at|date:"d M Y, H:i" }}</td>
+            <td><strong>{{ attempt.percentage }}%</strong></td>
+            <td>{{ attempt.correct_count }} / {{ attempt.total_questions }}</td>
+            <td><a href="{% url 'exams:result' attempt.id %}">Review →</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">You haven't taken any tests yet.<br><br><a class="btn btn-primary" href="{% url 'exams:home' %}">Browse tests</a></div>
+  {% endif %}
+</div>
+{% endblock %}
