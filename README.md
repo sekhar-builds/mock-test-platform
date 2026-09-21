@@ -2,7 +2,9 @@
 
 An online mock test platform for coaching institutes, tutors and exam-prep websites. Students take timed MCQ tests, get their score the moment they submit, and review every question with an explanation. The institute manages tests, questions and results from an admin panel, with no coding needed.
 
-**Live demo:** _coming soon_ · Demo login: `demo` / `demo12345`
+### 👉 [Try the live demo](https://mock-test-platform-urbl.onrender.com)
+
+Demo login: `demo` / `demo12345` · Hosted on a free server, so the first visit can take up to a minute to wake up.
 
 ![Home page listing tests by subject](docs/screenshots/home.png)
 
