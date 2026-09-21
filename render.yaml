@@ -3,6 +3,7 @@ services:
     name: mock-test-platform
     runtime: python
     plan: free
+    region: singapore
     buildCommand: bash build.sh
     startCommand: gunicorn config.wsgi:application
     envVars:
